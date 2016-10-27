@@ -1,0 +1,12 @@
+# Task for setting up EC2 instances.
+---
+- include_vars: aws.yml
+
+- include: vpc.yml
+
+- include: security_groups.yml
+
+- include: ec2_instances.yml
+
+- include: elb.yml
+

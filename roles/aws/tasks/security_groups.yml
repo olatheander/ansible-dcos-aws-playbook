@@ -1,0 +1,30 @@
+# Create security group(s)
+---
+- name: Create EC2 Security Group
+  local_action:
+    module: ec2_group
+    name: "{{ ec2_security_group }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    description: "{{ ec2_security_group_name }}"
+    region: "{{ ec2_region }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+
+      # Open all tcp ports for 10.0.0.0/8.
+      - proto: all
+        from_port: -1
+        to_port: -1
+        cidr_ip: 10.0.0.0/16

@@ -1,0 +1,87 @@
+---
+- name: Create EC2 instances
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  # Definition of EC2 instances inspired by https://github.com/chrismeyersfsu/playbook-ec2_properties.
+  vars:
+#   CentOS 7 (x86_64) - with Updates HVM ()
+#    dcos_ami_id: "ami-7abd0209"
+#   Ubuntu 16.04  AMI
+#    dcos_ami_id: "ami-c06b1eb3"
+#   CoreOS
+    dcos_ami_id: "ami-a94c02da"
+    ec2_security_group: dcos-cluster
+    ec2_security_group_name: Security Group for the DC/OS cluster
+    ec2_instances:
+      - name: "mesos-master"
+        exact_count: 0
+        count_tag: "mesos_master"
+        tags: {Name: mesos-master, java: '', zookeeper: '', mesos_master: '', marathon: ''}
+      - name: "mesos-slave"
+        exact_count: 0
+        count_tag: "mesos_slave"
+        instance_type: "m3.large"
+        tags: {Name: mesos-slave, java: '', docker: '', mesos_slave: ''}
+      - name: "k8s-master"
+        exact_count: 0
+        count_tag: "k8s"
+        instance_type: "m3.large"
+        tags: {Name: k8s-master, k8s: ''}
+      - name: "dcos_master"
+        exact_count: 3
+        count_tag: "dcos_master"
+        instance_type: "m3.large"
+        ami_id: "{{ dcos_ami_id }}"
+        tags: {Name: dcos-master, private_host: '', ansible_managed: '', python: '', docker: '', dcos_cluster_node: '', dcos_master: ''}
+#        tags: {Name: dcos-master, private_host: '', ansible_managed: '', docker: '', dcos_cluster_node: '', dcos_master: ''}
+      - name: "dcos_slave"
+        exact_count: 3
+        count_tag: "dcos_slave"
+        instance_type: "m3.large"
+        ami_id: "{{ dcos_ami_id }}"
+        tags: {Name: dcos-slave, private_host: '', ansible_managed: '', python: '', docker: '', dcos_cluster_node: '', dcos_slave: ''}
+      - name: "dcos_slave_public"
+        exact_count: 1
+        count_tag: "dcos_slave_public1"
+        instance_type: "m3.large"
+        ami_id: "{{ dcos_ami_id }}"
+        assign_public_ip: True
+        tags: {Name: dcos-slave-public, private_host: '', ansible_managed: '', python: '', docker: '', dcos_cluster_node: '', dcos_slave_public: '', subnet: 'subnet-public', dcos_slave_public1: ''}
+      - name: "dcos_slave_public2"
+        exact_count: 1
+        count_tag: "dcos_slave_public2"
+        instance_type: "m3.large"
+        ami_id: "{{ dcos_ami_id }}"
+        assign_public_ip: True
+        tags: {Name: dcos-slave-public2, private_host: '', ansible_managed: '', python: '', docker: '', dcos_cluster_node: '', dcos_slave_public: '', subnet: 'subnet-public2', dcos_slave_public2: ''}
+      - name: "dcos-bootstrap"
+        exact_count: 1
+        count_tag: "dcos_bootstrap"
+        instance_type: "m3.large"
+        ami_id: "{{ dcos_ami_id }}"
+        assign_public_ip: True
+        tags: {Name: dcos-bootstrap, private_host: '', ansible_managed: '', python: '', docker: '', dcos_bootstrap: '', subnet: 'subnet-public'}
+#        tags: {Name: dcos-bootstrap, private_host: '', ansible_managed: '', docker: '', dcos_bootstrap: '', subnet: 'subnet-public'}
+      - name: "dcos-ssh-jumphost"
+        exact_count: 1
+        count_tag: "ssh_jumphost"
+        assign_public_ip: True
+        tags: {Name: dcos-ssh-jumphost, private_host: '', ansible_managed: '', python: '', ssh_jumphost: '', dcos-controller: '', subnet: 'subnet-public'}
+  roles:
+    - aws
+
+#  tasks:
+#    - name: Wait for SSH
+#      wait_for:
+#        host: "{{ item['instances'][0]['public_ip'] }}"
+#        port: 22
+#        delay: 10
+#        timeout: 320
+#        state: started
+#      with_items: "{{ ec2.results }}"
+
+  tasks:
+    - debug: msg="*** Playbook done! ***"
+
+

@@ -1,0 +1,70 @@
+# Defaults for EC2 configuration.
+---
+# Common
+ec2_keypair: "{{ lookup('env', 'AWS_EC2_KEY_PAIR') }}"
+ec2_region: eu-west-1
+ec2_availability_zones:
+  - eu-west-1a
+  - eu-west-1b
+  - eu-west-1c
+
+# EC2 instance defaults
+ec2_ami_id: ami-3907d64e
+ec2_instance_type: t1.micro
+ec2_assign_public_ip: False
+#volumes:
+#  - device_name: /dev/xvda
+#    volume_size: 20
+
+# Security group defaults
+ec2_security_group: sg_cluster
+ec2_security_group_name: Security Group for Cluster
+
+# VPC defaults
+vpc_name: cluster-vpc
+vpc_state: present
+vpc_cidr_block: 10.0.0.0/16
+vpc_resource_tags: { Name: cluster-vpc, "Environment":"Development" }
+vpc_subnets:
+  - cidr: 10.0.0.0/24
+    az: eu-west-1a
+    resource_tags: { Name: cluster-subnet-public, "Environment":"Dev", "SubnetType":"Private" }
+  - cidr: 10.0.1.0/24
+    az: eu-west-1a
+    resource_tags: { Name: cluster-subnet-private, "Environment":"Dev", "SubnetType":"Public" }
+vpc_route_tables:
+  - subnets:
+     - 10.0.0.0/24
+    routes:
+     - dest: 0.0.0.0/0
+       gw: igw
+  - subnets:
+     - 10.0.1.0/24
+    routes:
+     - dest: 0.0.0.0/0
+       gw: igw
+vpc_internet_gw: True
+vpc_internet_gw_tags: { Name: cluster-gateway }
+
+# ELB defaults
+elb_name: cluster-elb
+elb_scheme: internet-facing
+elb_state: present
+elb_ssl_certificate_id:	"{{ lookup('env', 'AWS_EC2_LB_CERT') }}"
+elb_listeners:
+  - protocol: http # options are http, https, ssl, tcp
+    load_balancer_port: 80
+    instance_port: 10000
+  - protocol: https
+    load_balancer_port: 443
+    instance_protocol: http # optional, defaults to value of protocol setting
+    instance_port: 10000
+    # ssl certificate required for https or ssl
+    ssl_certificate_id: "{{ elb_ssl_certificate_id }}"
+elb_health_check: {ping_protocol: http, ping_port: 9090, ping_path: "/_haproxy_health_check", response_timeout: 5, interval: 30, unhealthy_threshold: 2, healthy_threshold: 10}
+elb_access_logs_interval: 5
+elb_access_logs_s3_location: "{{ lookup('env', 'AWS_S3_ELB_LOGS_BUCKET_NAME') }}"
+elb_access_logs_s3_prefix: logs
+elb_s3_bucket_tags: { Name: cluster-elb-logs, "Environment":"Dev" }
+elb_tags: { Name: cluster-lb, "Environment":"Dev" }
+

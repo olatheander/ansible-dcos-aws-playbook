@@ -1,0 +1,9 @@
+[submodule "community/roles/docker"]
+	path = community/roles/docker
+	url = https://github.com/AnsibleShipyard/ansible-docker.git
+[submodule "community/roles/dcos-bootstrap"]
+	path = community/roles/dcos-bootstrap
+	url = https://github.com/olatheander/ansible-dcos-bootstrap.git
+[submodule "community/roles/dcos"]
+	path = community/roles/dcos
+	url = https://github.com/olatheander/ansible-dcos.git

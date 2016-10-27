@@ -1,0 +1,172 @@
+---
+
+- name: Create AWS VPC
+  ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr_block }}"
+    region: "{{ ec2_region }}"
+    tags: "{{ vpc_resource_tags }}"
+    tenancy: default
+  register: vpc
+
+- debug: var=vpc verbosity=1
+
+- name: Create VPC public subnet
+  ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    cidr: 10.0.0.0/24
+    region: "{{ ec2_region }}"
+    az: "{{ ec2_availability_zones[0] }}"
+    resource_tags: { Name: subnet-public }
+  register: public_subnet
+
+- debug: var=public_subnet verbosity=2
+
+# Create second public subnet.
+- name: Create VPC public subnet
+  ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    cidr: 10.0.2.0/24
+    region: "{{ ec2_region }}"
+    az: "{{ ec2_availability_zones[1] }}"
+    resource_tags: { Name: subnet-public2 }
+  register: public_subnet2
+
+- debug: var=public_subnet2 verbosity=2
+
+- name: Create VPC private subnet
+  ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    cidr: 10.0.1.0/24
+    region: "{{ ec2_region }}"
+    az: "{{ ec2_availability_zones[0] }}"
+    resource_tags: { Name: subnet-private }
+  register: private_subnet
+
+- debug: var=private_subnet verbosity=2
+
+- ec2_vpc_subnet_facts:
+    region: "{{ ec2_region }}"
+    filters:
+      vpc-id: "{{ vpc.vpc.id }}"
+  register: vpc_subnet_facts
+
+- debug: var=vpc_subnet_facts verbosity=1
+
+- name: Create Internet GW
+  ec2_vpc_igw:
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    state: present
+  register: igw
+
+- debug: var=igw verbosity=1
+
+- name: Tagging the new internet gateway created
+  ec2_tag:
+    resource: "{{ igw.gateway_id }}"
+    state: present
+    region: "{{ ec2_region }}"
+    tags: "{{ vpc_internet_gw_tags }}"
+
+- name: Get NAT facts
+  command: aws ec2 describe-nat-gateways --filter "Name=vpc-id,Values={{ vpc.vpc.id }}"
+  register: nat_describe
+
+- debug: var=nat_describe verbosity=1
+
+- set_fact:
+    nat_describe_fact: "{{ nat_describe.stdout|from_json }}"
+
+- debug: var=nat_describe_fact verbosity=1
+
+- set_fact:
+    nat_exists: "{{ (nat_describe_fact.NatGateways | selectattr('State', 'equalto', 'available') | list | length) == 1 }}"
+
+- debug: var=nat_exists verbosity=1
+
+- set_fact:
+    nat_existing: "{{ nat_describe_fact.NatGateways | selectattr('State', 'equalto', 'available') | list | first }}"
+  when: nat_exists == true
+
+- debug: var=nat_existing verbosity=1
+
+- name: Allocate a new elastic IP
+  ec2_eip:
+    region: "{{ ec2_region }}"
+    in_vpc: True
+    release_on_disassociation: True
+  register: eip
+  when: nat_exists == false
+
+- debug: var=eip verbosity=1
+  when: nat_exists == false
+
+# TODO: when at Ansible v. 2.2 replace this with "ec2_vpc_nat_gateway".
+- name: Create the NAT gateway.
+  command: aws ec2 create-nat-gateway --subnet-id "{{ public_subnet.subnet.id }}" --allocation-id "{{ eip.allocation_id }}"
+  register: nat_output
+  when: nat_exists == false
+
+- name: Wait a bit for NAT gateway to stabilize.
+  pause: seconds=30
+  when: nat_exists == false
+
+- name: Set the NAT facts.
+  set_fact: 
+    nat: "{{ nat_output.stdout|from_json }}"
+  when: nat_exists == false
+
+- debug: var=nat verbosity=1
+  when: nat_exists == false
+
+- set_fact:
+    nat_gateway_id: "{{ nat.NatGateway.NatGatewayId }}"
+  when: nat_exists == false
+
+- set_fact:
+    nat_gateway_id: "{{ nat_existing.NatGatewayId }}"
+  when: nat_exists == true
+
+- debug: var=nat_gateway_id verbosity=1
+
+- name: Configure private subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    tags: { Name: private-route-table }
+    subnets:
+      - "{{ private_subnet.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ nat_gateway_id }}"
+  register: vpc_private_route_table
+
+- debug: var=vpc_private_route_table verbosity=1
+
+- name: Configure public subnet(s) route table
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    tags: { Name: public-route-table }
+    subnets:
+      - "{{ public_subnet.subnet.id }}"
+      - "{{ public_subnet2.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
+  register: vpc_public_route_table
+
+- debug: var=vpc_public_route_table verbosity=1
+
+- ec2_vpc_route_table_facts:
+    region: "{{ ec2_region }}"
+    filters:
+      vpc-id: "{{ vpc.vpc.id }}"
+  register: vpc_route_table_facts
+
+- debug: var=vpc_route_table_facts verbosity=1
+

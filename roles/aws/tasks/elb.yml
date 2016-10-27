@@ -1,0 +1,52 @@
+---
+#Configuration of AWS Elastic Load Balancer for the VPC.
+
+- debug: var=elb_ssl_certificate_id verbosity=1
+
+- fail: msg="No SSL certificate is defined for ELB. Check AWS_EC2_LB_CERT environment variable." 
+  when: elb_ssl_certificate_id is undefined or elb_ssl_certificate_id == ""
+
+- debug: var=elb_access_logs_s3_location verbosity=1
+
+- fail: msg="No S3 bucket configured for storing ELB logs. Check AWS_S3_ELB_LOGS_BUCKET_NAME environment variable."
+  when: elb_access_logs_s3_location is undefined or elb_access_logs_s3_location == ""
+
+- set_fact:
+    elb_nodes: "{{ hostvars | get_members(groups, 'tag_dcos_slave_public') | map(attribute='ec2_id') | list  }}"
+
+- debug: var=elb_nodes verbosity=1
+
+# TODO: Proper IAM must be set before enabliing s3 bucket otherwise the ec2_elb_lb will fail. Create bucket manually for now.
+#- name: Create s3 bucket for ELB logs
+#  s3_bucket:
+#    name: "{{ elb_access_logs_s3_location }}"
+#    region: "{{ ec2_region }}"
+#    tags: "{{ elb_s3_bucket_tags }}"
+#  register: elb_s3_bucket
+
+#- debug: var=elb_s3_bucket verbosity=1
+
+- name: Create EC2 elastic load balancer
+  local_action:
+    module: ec2_elb_lb
+    name: "{{ elb_name }}"
+    scheme: "{{ elb_scheme }}"
+    state: "{{ elb_state }}"
+    instance_ids: "{{ hostvars | get_members(groups, 'tag_dcos_slave_public') | map(attribute='ec2_id') | list  }}"
+    purge_instance_ids: true
+    region: "{{ ec2_region }}"
+    security_group_names: "{{ ec2_security_group }}"
+    subnets:
+      - "{{ public_subnet.subnet.id }}"
+      - "{{ public_subnet2.subnet.id }}"
+    listeners: "{{ elb_listeners }}"
+    health_check: "{{ elb_health_check }}"
+    access_logs:
+      interval: "{{ elb_access_logs_interval }}"
+      s3_location: "{{ elb_access_logs_s3_location }}"
+      s3_prefix: "{{ elb_access_logs_s3_prefix }}"
+    tags: "{{ elb_tags }}"
+  register: elb
+
+- debug: var=elb verbosity=1
+

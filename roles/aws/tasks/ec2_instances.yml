@@ -1,0 +1,32 @@
+---
+
+- debug: var=ec2_keypair verbosity=1
+
+- fail: msg="No keypair is configured for EC2 instances. Check AWS_EC2_KEY_PAIR environment variable."
+  when: ec2_keypair is undefined or ec2_keypair == ""
+
+# Create EC2 instances.
+- name: Launch EC2 instance(s)
+  ec2:
+    key_name: "{{ ec2_keypair }}"
+    group: "{{ item.security_group | default(ec2_security_group) }}"
+    instance_type: "{{ item.instance_type | default(ec2_instance_type) }}"
+    region: "{{ item.region | default(ec2_region) }}"
+    image: "{{ item.ami_id | default(ec2_ami_id) }}"
+    vpc_subnet_id: "{{ (vpc_subnet_facts.subnets | selectattr('tags.Name','equalto', item.tags.subnet | default('subnet-private')) | first).id }}"
+    assign_public_ip: "{{ item.assign_public_ip | default(ec2_assign_public_ip) }}"
+    wait: true
+    exact_count: "{{ item.exact_count }}"
+    count_tag: "{{ item.count_tag }}"
+    instance_tags: "{{ item.tags }}"
+#    volumes: "{{ volumes }}"
+  register: ec2
+  with_items: "{{ ec2_instances }}"
+
+- debug: var=ec2 verbosity=1
+
+- name: Refresh EC2 cache
+  command: ./ec2.py --refresh-cache
+
+- name: Refresh in-memory EC2 cache
+  meta: refresh_inventory
