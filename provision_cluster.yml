@@ -23,9 +23,6 @@
   gather_facts: true
   become: true
   become_method: sudo
-  tasks:
-    - name: Install docker-py
-      pip: name=docker-py state=latest
   roles:
     - docker
 

@@ -10,3 +10,6 @@
 [submodule "community/roles/pip"]
 	path = community/roles/pip
 	url = https://github.com/bobbyrenwick/ansible-pip.git
+[submodule "community/roles/docker"]
+	path = community/roles/docker
+	url = https://github.com/olatheander/ansible-docker.git

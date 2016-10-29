@@ -1,0 +1,6 @@
+# Compiled Python.
+*.pyc
+
+# Ansible retry files.
+*.retry
+
