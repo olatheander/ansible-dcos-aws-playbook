@@ -8,9 +8,9 @@
 #   CentOS 7 (x86_64) - with Updates HVM ()
 #    dcos_ami_id: "ami-7abd0209"
 #   Ubuntu 16.04  AMI
-#    dcos_ami_id: "ami-c06b1eb3"
+    dcos_ami_id: "ami-c06b1eb3"
 #   CoreOS
-    dcos_ami_id: "ami-a94c02da"
+#    dcos_ami_id: "ami-a94c02da"
     ec2_security_group: dcos-cluster
     ec2_security_group_name: Security Group for the DC/OS cluster
     ec2_instances:

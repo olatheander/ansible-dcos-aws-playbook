@@ -10,57 +10,32 @@
   pre_tasks:
     - raw: sudo apt-get -y install python
 
-- name: Install Java on tagged hosts
-  hosts: tag_java
-  gather_facts: true
+- name: Install Python pip
+  hosts: tag_python
+  become: yes
+  become_method: sudo
+  gather_facts: false
   roles:
-    - java
+    - pip
 
 - name: Install Docker on tagged hosts
   hosts: tag_docker
   gather_facts: true
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Install docker-py
+      pip: name=docker-py state=latest
   roles:
     - docker
-
-- name: Install Zookeeper on tagged hosts
-  hosts: tag_zookeeper
-  gather_facts: true
-  roles:
-    - zookeeper
-
-- name: Install Mesos on tagged hosts
-  hosts: tag_mesos_master
-  gather_facts: true
-  roles:
-    - { role: mesos, zookeeper_hostnames: "{{ groups.tag_zookeeper | join(':' + zookeeper_client_port + ',')  }}:{{ zookeeper_client_port  }}" }
-
-- name: Install Mesos slaves on tagged hosts
-  hosts: tag_mesos_slave
-  gather_facts: true
-  roles:
-    - { role: mesos, mesos_containerizers: "docker,mesos", mesos_install_mode: "slave", zookeeper_hostnames: "{{ groups.tag_zookeeper | join(':' + zookeeper_client_port + ',')  }}:{{ zookeeper_client_port  }}" }
-
-- name: Install Marathon on tagged hosts
-  hosts: tag_marathon
-  gather_facts: true
-  roles:
-    - { role: marathon, zookeeper_hostnames: "{{ groups.tag_zookeeper | join(':' + zookeeper_client_port + ',')  }}:{{ zookeeper_client_port  }}" }
-
-- name: Install K8s on tagged hosts
-  hosts: tag_k8s
-  gather_facts: true
-  vars:
-    repository: "deb https://apt.dockerproject.org/repo ubuntu-trusty main"
-    install_apparmor: true
-  roles:
-    - docker
-    - k8s
 
 - name: Install DCOS bootstrap on tagged host
   hosts: tag_dcos_bootstrap
   gather_facts: true
+  become: true
+  become_method: sudo
   roles:
-    - dcos_bootstrap
+    - dcos-bootstrap
 
 - name: Install DCOS master, slave and public slaves on tagged hosts
   hosts: tag_dcos_cluster_node
@@ -72,5 +47,5 @@
   hosts: tag_dcos_controller[0]
   gather_facts: true
   roles:
-    - dcos_controller
+    - dcos-controller
 

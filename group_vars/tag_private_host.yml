@@ -1,0 +1,4 @@
+---
+ssh_jumphost_user: "{{ ansible_user | default('ubuntu') }}"
+ssh_jumphost_dns_name: "{{ hostvars[groups['tag_ssh_jumphost'][0]].ec2_public_dns_name }}"
+ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p -q {{ssh_jumphost_user}}@{{ ssh_jumphost_dns_name }}"
