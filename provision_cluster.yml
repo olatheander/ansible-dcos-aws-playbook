@@ -34,9 +34,25 @@
   roles:
     - dcos-bootstrap
 
-- name: Install DCOS master, slave and public slaves on tagged hosts
-  hosts: tag_dcos_cluster_node
+- name: Install DCOS master host(s)
+  hosts: tag_dcos_master
   gather_facts: true
+  roles:
+    - dcos
+
+- name: Install DCOS slave host(s)
+  hosts: tag_dcos_slave
+  gather_facts: true
+  vars:
+    dcos_node_type: slave
+  roles:
+    - dcos
+
+- name: Install DCOS slave host(s)
+  hosts: tag_dcos_slave_public
+  gather_facts: true
+  vars:
+    dcos_node_type: slave_public
   roles:
     - dcos
 
