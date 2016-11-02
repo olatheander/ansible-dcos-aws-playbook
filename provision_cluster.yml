@@ -10,20 +10,14 @@
   pre_tasks:
     - raw: sudo apt-get -y install python
 
-- name: Install Python pip
-  hosts: tag_python
-  become: yes
-  become_method: sudo
-  gather_facts: false
-  roles:
-    - pip
-
-- name: Install Docker on tagged hosts
-  hosts: tag_docker
+# Needs to be a separate playbook task since the Docker service will be restartebd thus loosing running containers..
+- name: Install Pip & Docker on tagged hosts
+  hosts: tag_dcos_bootstrap:tag_dcos_master:tag_dcos_slave:tag_dcos_slave_public
   gather_facts: true
   become: true
   become_method: sudo
   roles:
+    - pip
     - docker
 
 - name: Install DCOS bootstrap on tagged host
@@ -37,20 +31,26 @@
 - name: Install DCOS master host(s)
   hosts: tag_dcos_master
   gather_facts: true
+  become: true
+  become_method: sudo
   roles:
     - dcos
 
 - name: Install DCOS slave host(s)
   hosts: tag_dcos_slave
   gather_facts: true
+  become: true
+  become_method: sudo
   vars:
     dcos_node_type: slave
   roles:
     - dcos
 
-- name: Install DCOS slave host(s)
+- name: Install DCOS public slave host(s)
   hosts: tag_dcos_slave_public
   gather_facts: true
+  become: true
+  become_method: sudo
   vars:
     dcos_node_type: slave_public
   roles:
@@ -59,6 +59,8 @@
 - name: Install DCOS cli on DCOS controller hosts
   hosts: tag_dcos_controller[0]
   gather_facts: true
+  become: true
+  become_method: sudo
   roles:
     - dcos-controller
 
