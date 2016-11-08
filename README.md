@@ -17,6 +17,7 @@ To try it out do:
    $ ssh-add ~/.ssh/<amazon key file> 
    ```
 1. Run the playbook as `ansible-playbook -i ec2.py main.yml` to set up the EC2 instances, VPC, subnets, ELB etc.
+  1. [boto3](https://pypi.python.org/pypi/boto3) must be installed.
 1. Run the playbook as `ansible-playbook -i ec2.py provision_cluster.yml` to provision the instances with DC/OS nodes.
 
 ## Environment variables

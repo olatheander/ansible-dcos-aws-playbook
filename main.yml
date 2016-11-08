@@ -13,6 +13,9 @@
 #    dcos_ami_id: "ami-a94c02da"
     ec2_security_group: dcos-cluster
     ec2_security_group_name: Security Group for the DC/OS cluster
+    vpc_name: dcos-cluster-vpc
+    vpc_resource_tags: { Name: dcos-cluster-vpc, "Environment":"Development" }
+    elb_name: dcos-cluster-elb
     ec2_instances:
       - name: "dcos_master"
         exact_count: 3
