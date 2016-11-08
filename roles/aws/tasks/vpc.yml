@@ -72,66 +72,16 @@
     region: "{{ ec2_region }}"
     tags: "{{ vpc_internet_gw_tags }}"
 
-- name: Get NAT facts
-  command: aws ec2 describe-nat-gateways --filter "Name=vpc-id,Values={{ vpc.vpc.id }}"
-  register: nat_describe
-
-- debug: var=nat_describe verbosity=1
-
-- set_fact:
-    nat_describe_fact: "{{ nat_describe.stdout|from_json }}"
-
-- debug: var=nat_describe_fact verbosity=1
-
-- set_fact:
-    nat_exists: "{{ (nat_describe_fact.NatGateways | selectattr('State', 'equalto', 'available') | list | length) == 1 }}"
-
-- debug: var=nat_exists verbosity=1
-
-- set_fact:
-    nat_existing: "{{ nat_describe_fact.NatGateways | selectattr('State', 'equalto', 'available') | list | first }}"
-  when: nat_exists == true
-
-- debug: var=nat_existing verbosity=1
-
-- name: Allocate a new elastic IP
-  ec2_eip:
-    region: "{{ ec2_region }}"
-    in_vpc: True
-    release_on_disassociation: True
-  register: eip
-  when: nat_exists == false
-
-- debug: var=eip verbosity=1
-  when: nat_exists == false
-
-# TODO: when at Ansible v. 2.2 replace this with "ec2_vpc_nat_gateway".
 - name: Create the NAT gateway.
-  command: aws ec2 create-nat-gateway --subnet-id "{{ public_subnet.subnet.id }}" --allocation-id "{{ eip.allocation_id }}"
-  register: nat_output
-  when: nat_exists == false
+  ec2_vpc_nat_gateway:
+    state: present
+    subnet_id: "{{ public_subnet.subnet.id }}"
+    wait: yes
+    region: "{{ ec2_region }}"
+    if_exist_do_not_create: true
+  register: vpc_nat_gateway  
 
-- name: Wait a bit for NAT gateway to stabilize.
-  pause: seconds=30
-  when: nat_exists == false
-
-- name: Set the NAT facts.
-  set_fact: 
-    nat: "{{ nat_output.stdout|from_json }}"
-  when: nat_exists == false
-
-- debug: var=nat verbosity=1
-  when: nat_exists == false
-
-- set_fact:
-    nat_gateway_id: "{{ nat.NatGateway.NatGatewayId }}"
-  when: nat_exists == false
-
-- set_fact:
-    nat_gateway_id: "{{ nat_existing.NatGatewayId }}"
-  when: nat_exists == true
-
-- debug: var=nat_gateway_id verbosity=1
+- debug: var=vpc_nat_gateway verbosity=1
 
 - name: Configure private subnet route table
   ec2_vpc_route_table:
@@ -142,7 +92,7 @@
       - "{{ private_subnet.subnet.id }}"
     routes:
       - dest: 0.0.0.0/0
-        gateway_id: "{{ nat_gateway_id }}"
+        gateway_id: "{{ vpc_nat_gateway.nat_gateway_id }}"
   register: vpc_private_route_table
 
 - debug: var=vpc_private_route_table verbosity=1
