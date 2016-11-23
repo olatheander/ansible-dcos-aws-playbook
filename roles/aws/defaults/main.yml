@@ -10,7 +10,7 @@ ec2_availability_zones:
 
 # EC2 instance defaults
 ec2_ami_id: ami-3907d64e
-ec2_instance_type: t1.micro
+ec2_instance_type: t2.micro
 ec2_assign_public_ip: False
 #volumes:
 #  - device_name: /dev/xvda

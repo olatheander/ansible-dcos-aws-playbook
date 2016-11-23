@@ -58,22 +58,12 @@
       - name: "dcos-ssh-jumphost"
         exact_count: 1
         count_tag: "ssh_jumphost"
+        ami_id: "{{ dcos_ami_id }}"
         assign_public_ip: True
         tags: {Name: dcos-ssh-jumphost, private_host: '', python: '', ssh_jumphost: '', dcos-controller: '', subnet: 'subnet-public'}
   roles:
     - aws
 
-#  tasks:
-#    - name: Wait for SSH
-#      wait_for:
-#        host: "{{ item['instances'][0]['public_ip'] }}"
-#        port: 22
-#        delay: 10
-#        timeout: 320
-#        state: started
-#      with_items: "{{ ec2.results }}"
-
   tasks:
     - debug: msg="*** Playbook done! ***"
-
 

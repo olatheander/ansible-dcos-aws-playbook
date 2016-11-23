@@ -2,12 +2,50 @@
 # EC2 dynamic invetory create different permutations of host collections based on instance properties such as tags.
 # See http://codeheaven.io/15-things-you-should-know-about-ansible/ item 12 for more info.
 
+- name: Wait for jumphost SSH
+  hosts: tag_ssh_jumphost
+  gather_facts: false
+  tasks:
+  - local_action:
+      wait_for
+        host="{{ hostvars[inventory_hostname].ec2_ip_address }}"
+        port=22
+        delay=10
+        timeout=360
+        state=started
+
+- name: Install Python on SSH jumphost
+  hosts: tag_ssh_jumphost
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  pre_tasks:
+    - raw: sudo apt-get -y dist-upgrade
+    - raw: sudo apt-get update
+    - raw: sudo apt-get -y upgrade
+    - raw: sudo apt-get -y install python
+
+- name: Wait for nodes SSH from jumphost
+  hosts: tag_ssh_jumphost
+  gather_facts: false
+  tasks:
+  - wait_for:
+      host="{{ hostvars[item].ec2_private_ip_address }}"
+      port=22
+      delay=10
+      timeout=360
+      state=started
+    with_items: "{{ groups.tag_private_host }}"
+
 - name: Install/upgrade Python
   hosts: tag_python 
   become: yes
   become_method: sudo
   gather_facts: false
   pre_tasks:
+    - raw: sudo apt-get -y dist-upgrade
+    - raw: sudo apt-get update
+    - raw: sudo apt-get -y upgrade
     - raw: sudo apt-get -y install python
 
 # Needs to be a separate playbook task since the Docker service will be restartebd thus loosing running containers..
