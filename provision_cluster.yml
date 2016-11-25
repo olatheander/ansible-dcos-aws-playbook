@@ -99,6 +99,9 @@
   gather_facts: true
   become: true
   become_method: sudo
+  tags:
+    - dcos-components
+    - dcos-demos
   roles:
     - dcos-controller
 
