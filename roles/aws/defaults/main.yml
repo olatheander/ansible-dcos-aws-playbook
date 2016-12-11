@@ -54,11 +54,11 @@ elb_ssl_certificate_id:	"{{ lookup('env', 'AWS_EC2_LB_CERT') }}"
 elb_listeners:
   - protocol: http # options are http, https, ssl, tcp
     load_balancer_port: 80
-    instance_port: 10000
+    instance_port: 80
   - protocol: https
     load_balancer_port: 443
     instance_protocol: http # optional, defaults to value of protocol setting
-    instance_port: 10000
+    instance_port: 443
     # ssl certificate required for https or ssl
     ssl_certificate_id: "{{ elb_ssl_certificate_id }}"
 elb_health_check: {ping_protocol: http, ping_port: 9090, ping_path: "/_haproxy_health_check", response_timeout: 5, interval: 30, unhealthy_threshold: 2, healthy_threshold: 10}
