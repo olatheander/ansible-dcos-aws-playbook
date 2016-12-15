@@ -1,16 +1,26 @@
 ---
+
+- name: Include and check OS variables for AMI selection
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - debug: var=ec2_target_os verbosity=1
+    - fail:
+        msg: "Invalid 'ec2_target_os', check environment variable 'EC2_TARGET_OS'. Must be one of ['Ubuntu', 'CentOS']."
+      when: ec2_target_os not in ["Ubuntu", "CentOS"]
+    - include_vars: "{{ item }}"
+      with_first_found:
+        - "os_vars/ami/{{ ec2_target_os }}-{{ ec2_target_os_version }}.yml"
+        - "os_vars/ami/{{ ec2_target_os }}.yml"
+    - debug: var=dcos_ami_id verbosity=1
+
 - name: Create EC2 instances
   hosts: localhost
   connection: local
   gather_facts: false
   # Definition of EC2 instances inspired by https://github.com/chrismeyersfsu/playbook-ec2_properties.
   vars:
-#   CentOS 7 (x86_64) - with Updates HVM ()
-#    dcos_ami_id: "ami-7abd0209"
-#   Ubuntu 16.04  AMI
-    dcos_ami_id: "ami-c06b1eb3"
-#   CoreOS
-#    dcos_ami_id: "ami-a94c02da"
     ec2_security_group: dcos-cluster
     ec2_security_group_name: Security Group for the DC/OS cluster
     vpc_name: dcos-cluster-vpc

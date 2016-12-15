@@ -25,6 +25,8 @@ To try it out do:
 The following environment varibles can be configured for Ansible lookup
 
 ### AWS
+* EC2_TARGET_OS: the target OS for the cluster nodes and can be any of [`Ubuntu` (default), `CentOS`]. Defines the AMI and SSH user for the provisioning.
+* EC2_TARGET_OS_VERSION: the version of the target e.g. `Xenial` for Ubuntu, `7` for CentOS.
 * AWS_EC2_KEY_PAIR: the name of the key pair to use when provisioning the cluster (EC2 instances etc.).
 * AWS_EC2_LB_CERT: the `arn` resource for the AWS ELB certificate.
 * AWS_S3_ELB_LOGS_BUCKET_NAME: the name of the S3 bucket where to store the ELB logs.

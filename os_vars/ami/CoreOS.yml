@@ -1,0 +1,3 @@
+---
+# CoreOS AMI HVM (https://coreos.com/os/docs/latest/booting-on-ec2.html)
+dcos_ami_id: "ami-eb3b6198"

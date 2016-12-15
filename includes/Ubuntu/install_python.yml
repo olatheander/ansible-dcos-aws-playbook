@@ -1,0 +1,12 @@
+---
+
+- name: Install Python on SSH jumphost
+  hosts: tag_ssh_jumphost
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  pre_tasks:
+    - raw: sudo apt-get -y dist-upgrade
+    - raw: sudo apt-get update
+    - raw: sudo apt-get -y upgrade
+    - raw: sudo apt-get -y install python

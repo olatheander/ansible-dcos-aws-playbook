@@ -5,6 +5,8 @@
 - name: Wait for jumphost SSH
   hosts: tag_ssh_jumphost
   gather_facts: false
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   tasks:
   - local_action:
       wait_for
@@ -19,15 +21,16 @@
   become: yes
   become_method: sudo
   gather_facts: false
-  pre_tasks:
-    - raw: sudo apt-get -y dist-upgrade
-    - raw: sudo apt-get update
-    - raw: sudo apt-get -y upgrade
-    - raw: sudo apt-get -y install python
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
+  tasks:
+    - include: "includes/{{ ec2_target_os }}/install_python.yml"
 
 - name: Wait for nodes SSH from jumphost
   hosts: tag_ssh_jumphost
   gather_facts: false
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   tasks:
   - wait_for:
       host="{{ hostvars[item].ec2_private_ip_address }}"
@@ -42,11 +45,10 @@
   become: yes
   become_method: sudo
   gather_facts: false
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   pre_tasks:
-    - raw: sudo apt-get -y dist-upgrade
-    - raw: sudo apt-get update
-    - raw: sudo apt-get -y upgrade
-    - raw: sudo apt-get -y install python
+    - include: "includes/{{ ec2_target_os }}/install_python.yml"
 
 # Needs to be a separate playbook task since the Docker service will be restartebd thus loosing running containers..
 - name: Install Pip & Docker on tagged hosts
@@ -54,6 +56,8 @@
   gather_facts: true
   become: true
   become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   roles:
     - pip
     - docker
@@ -63,6 +67,8 @@
   gather_facts: true
   become: true
   become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   roles:
     - dcos-bootstrap
 
@@ -71,6 +77,8 @@
   gather_facts: true
   become: true
   become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   roles:
     - dcos
 
@@ -79,6 +87,8 @@
   gather_facts: true
   become: true
   become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   vars:
     dcos_node_type: slave
   roles:
@@ -89,6 +99,8 @@
   gather_facts: true
   become: true
   become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   vars:
     dcos_node_type: slave_public
   roles:
@@ -99,6 +111,8 @@
   gather_facts: true
   become: true
   become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
   tags:
     - dcos-components
     - dcos-demos

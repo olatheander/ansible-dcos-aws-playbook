@@ -1,0 +1,3 @@
+---
+ec2_target_os: "{{ lookup('env', 'EC2_TARGET_OS') | default('Ubuntu', true) }}"
+ec2_target_os_version: "{{ lookup('env', 'EC2_TARGET_OS_VERSION') }}"

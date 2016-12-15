@@ -1,0 +1,3 @@
+---
+# CentOS 7 HVM (https://aws.amazon.com/marketplace/pp/B00O7WM7QW) 
+dcos_ami_id: "ami-7abd0209"
