@@ -13,3 +13,9 @@
 [submodule "community/roles/docker"]
 	path = community/roles/docker
 	url = https://github.com/olatheander/ansible-docker.git
+[submodule "community/roles/reboot-and-wait"]
+	path = community/roles/reboot-and-wait
+	url = https://github.com/olatheander/ansible-reboot-and-wait.git
+[submodule "community/roles/upgrade-packages"]
+	path = community/roles/upgrade-packages
+	url = https://github.com/olatheander/ansible-upgrade-packages.git

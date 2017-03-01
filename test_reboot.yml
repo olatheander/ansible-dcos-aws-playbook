@@ -1,0 +1,14 @@
+---
+
+- name: Reboot hosts
+  hosts: tag_dcos_master
+  gather_facts: true
+  become: true
+  become_method: sudo
+  vars_files:
+    - "os_vars/ssh/{{ ec2_target_os }}.yml"
+  vars:
+    delegate_to_host: "{{ groups['tag_ssh_jumphost'] | first }}"
+  roles:
+    - reboot-and-wait
+

@@ -50,7 +50,7 @@
   pre_tasks:
     - include: "includes/{{ ec2_target_os }}/install_python.yml"
 
-# Needs to be a separate playbook task since the Docker service will be restartebd thus loosing running containers..
+# Must be a separate playbook task since the Docker service will be restarted thus loosing running containers..
 - name: Install Pip & Docker on tagged hosts
   hosts: tag_dcos_bootstrap:tag_dcos_master:tag_dcos_slave:tag_dcos_slave_public
   gather_facts: true
@@ -81,6 +81,7 @@
     - "os_vars/ssh/{{ ec2_target_os }}.yml"
   roles:
     - dcos
+    - reboot-and-wait
 
 - name: Install DCOS slave host(s)
   hosts: tag_dcos_slave
@@ -93,6 +94,7 @@
     dcos_node_type: slave
   roles:
     - dcos
+    - reboot-and-wait
 
 - name: Install DCOS public slave host(s)
   hosts: tag_dcos_slave_public
@@ -105,6 +107,7 @@
     dcos_node_type: slave_public
   roles:
     - dcos
+    - reboot-and-wait
 
 - name: Install DCOS cli on DCOS controller hosts
   hosts: tag_dcos_controller[0]
