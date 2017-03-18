@@ -28,21 +28,21 @@
     elb_name: dcos-cluster-elb
     ec2_instances:
       - name: "dcos_master"
-        exact_count: 3
+        exact_count: "{{ lookup('env', 'DCOS_MASTER_EXACT_COUNT') | default(3, true) }}"
         count_tag: "dcos_master"
         instance_type: "m3.large"
         ami_id: "{{ dcos_ami_id }}"
         tags: {Name: dcos-master, private_host: '', python: '', dcos_master: ''}
 
       - name: "dcos_slave"
-        exact_count: 3
+        exact_count: "{{ lookup('env', 'DCOS_SLAVE_EXACT_COUNT') | default(3, true) }}"
         count_tag: "dcos_slave"
         instance_type: "m3.large"
         ami_id: "{{ dcos_ami_id }}"
         tags: {Name: dcos-slave, private_host: '', python: '', dcos_slave: ''}
 
       - name: "dcos_slave_public"
-        exact_count: 1
+        exact_count: "{{ lookup('env', 'DCOS_SLAVE_PUBLIC_EXACT_COUNT') | default(1, true) }}"
         count_tag: "dcos_slave_public1"
         instance_type: "m3.large"
         ami_id: "{{ dcos_ami_id }}"
@@ -50,7 +50,7 @@
         tags: {Name: dcos-slave-public, private_host: '', python: '', dcos_slave_public: '', subnet: 'subnet-public', dcos_slave_public1: ''}
 
       - name: "dcos_slave_public2"
-        exact_count: 1
+        exact_count: "{{ lookup('env', 'DCOS_SLAVE_PUBLIC_2_EXACT_COUNT') | default(1, true) }}"
         count_tag: "dcos_slave_public2"
         instance_type: "m3.large"
         ami_id: "{{ dcos_ami_id }}"

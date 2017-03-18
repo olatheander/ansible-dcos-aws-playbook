@@ -11,6 +11,9 @@
 - fail: msg="No S3 bucket configured for storing ELB logs. Check AWS_S3_ELB_LOGS_BUCKET_NAME environment variable."
   when: elb_access_logs_s3_location is undefined or elb_access_logs_s3_location == ""
 
+- fail: msg="At least one public slave must be configured."
+  when: hostvars | get_members(groups, 'tag_dcos_slave_public') | default([]) | length == 0 
+
 - set_fact:
     elb_nodes: "{{ hostvars | get_members(groups, 'tag_dcos_slave_public') | map(attribute='ec2_id') | list  }}"
 
